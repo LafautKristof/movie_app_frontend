@@ -1,10 +1,9 @@
-// app/api/favorites/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "../auth/[...nextauth]/route";
 
-// GET /api/favorites → alle favorites van de ingelogde user
+// GET /api/watchlist → alle films van de user
 export async function GET() {
     const session = await getServerSession(authOptions);
 
@@ -14,13 +13,13 @@ export async function GET() {
 
     const user = await prisma.user.findUnique({
         where: { email: session.user.email },
-        include: { favorites: { include: { movie: true } } }, // filmdata erbij
+        include: { watchlist: { include: { movie: true } } }, // ✅ film info erbij
     });
 
-    return NextResponse.json(user?.favorites ?? []);
+    return NextResponse.json(user?.watchlist ?? []);
 }
 
-// POST /api/favorites → voeg toe (of laat staan als al bestaat)
+// POST /api/watchlist → voeg toe als hij nog niet bestaat
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
 
@@ -38,7 +37,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // ✅ Stap 1: Movie upsert (garandeer dat de film bestaat)
+    // ✅ Stap 1: Movie garanderen
     await prisma.movie.upsert({
         where: { id: body.id },
         update: {
@@ -54,8 +53,8 @@ export async function POST(req: Request) {
         },
     });
 
-    // ✅ Stap 2: Favorite koppelen
-    const fav = await prisma.favorite.upsert({
+    // ✅ Stap 2: Watchlist item upserten
+    const item = await prisma.watchlist.upsert({
         where: {
             userId_movieId: {
                 userId: user.id,
@@ -65,14 +64,14 @@ export async function POST(req: Request) {
         update: {}, // niks aanpassen
         create: {
             userId: user.id,
-            movieId: body.id, // gewoon de foreign key invullen
+            movieId: body.id,
         },
     });
 
-    return NextResponse.json(fav);
+    return NextResponse.json(item);
 }
 
-// DELETE /api/favorites → verwijder favorite
+// DELETE /api/watchlist → verwijder film
 export async function DELETE(req: Request) {
     const session = await getServerSession(authOptions);
 
@@ -91,7 +90,7 @@ export async function DELETE(req: Request) {
     }
 
     try {
-        await prisma.favorite.delete({
+        await prisma.watchlist.delete({
             where: {
                 userId_movieId: {
                     userId: user.id,
@@ -102,7 +101,7 @@ export async function DELETE(req: Request) {
         return NextResponse.json({ success: true });
     } catch (err) {
         return NextResponse.json(
-            { error: "Favorite not found" },
+            { error: "Watchlist item not found" },
             { status: 404 }
         );
     }

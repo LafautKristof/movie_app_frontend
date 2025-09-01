@@ -1,65 +1,82 @@
-import Link from "next/link";
-import { genreMap, genreColors } from "@/helpers/genresMap";
+import prisma from "@/lib/prisma";
+import MovieCard from "@/components/MovieCard";
 
-export default async function HomePage() {
-    // 🔥 optioneel: populaire films ophalen via TMDB
-    const res = await fetch(
-        `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_API_KEY}`,
-        { cache: "no-store" }
-    );
-    const data = await res.json();
-    const popularMovies = data.results || [];
+export default async function HomePage({
+    searchParams,
+}: {
+    searchParams?: { limit?: string };
+}) {
+    const limit = parseInt(searchParams?.limit ?? "8", 10);
+
+    // top rated query
+    const topRated = await prisma.rating.groupBy({
+        by: ["movieId"],
+        _avg: { points: true },
+        orderBy: { _avg: { points: "desc" } },
+        take: limit,
+    });
+
+    const movies = await prisma.movie.findMany({
+        where: { id: { in: topRated.map((r) => r.movieId) } },
+    });
+
+    const sortedMovies = topRated
+        .map((r) => ({
+            avg: r._avg.points,
+            movie: movies.find((m) => m.id === r.movieId),
+        }))
+        .filter((x) => x.movie)
+        .sort((a, b) => (b.avg ?? 0) - (a.avg ?? 0));
 
     return (
         <div className="p-6">
             <h1 className="text-3xl font-bold mb-6">🎬 Movie Explorer</h1>
 
-            {/* Genres */}
-            <div className="mb-10">
-                <h2 className="text-2xl font-semibold mb-3">Genres</h2>
-                <div className="flex flex-wrap gap-2">
-                    {Object.entries(genreMap).map(([id, name]) => (
-                        <Link key={id} href={`/genre/${id}`}>
-                            <span
-                                className={`text-sm px-3 py-1 rounded-full font-semibold ${
-                                    genreColors[name] || "bg-gray-500"
-                                }`}
-                            >
-                                {name}
-                            </span>
-                        </Link>
-                    ))}
-                </div>
-            </div>
+            {/* Form om aantal films te kiezen */}
+            <form className="mb-6 flex items-center gap-2">
+                <select
+                    name="limit"
+                    defaultValue={limit}
+                    className="border px-2 py-1 rounded"
+                >
+                    <option value="8">8</option>
+                    <option value="16">16</option>
+                    <option value="32">32</option>
+                    <option value="64">64</option>
+                </select>
+                <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-3 py-1 rounded"
+                >
+                    Update
+                </button>
+            </form>
 
-            {/* Populaire films */}
-            <div>
-                <h2 className="text-2xl font-semibold mb-3">Popular Movies</h2>
-                <ul className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {popularMovies.slice(0, 8).map((movie: any) => (
-                        <li
-                            key={movie.id}
-                            className="bg-gray-800 text-white rounded p-3"
-                        >
-                            <Link href={`/search/${movie.id}`}>
-                                <img
-                                    src={
-                                        movie.poster_path
-                                            ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                                            : "/No_Image_Available.jpg"
-                                    }
-                                    alt={movie.title}
-                                    className="rounded mb-2"
-                                />
-                                <h3 className="font-semibold">{movie.title}</h3>
-                                <p className="text-sm opacity-75">
-                                    {movie.release_date}
-                                </p>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            <h2 className="text-2xl font-semibold mb-3">
+                ⭐ Top Rated by Users (showing {limit})
+            </h2>
+
+            <ul className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {sortedMovies.map(({ movie, avg }) => (
+                    <li
+                        key={movie!.id}
+                        className="bg-gray-800 text-white rounded p-3"
+                    >
+                        <MovieCard
+                            movie={{
+                                id: movie!.id,
+                                title: movie!.title,
+                                poster_path: movie!.posterPath,
+                                release_date:
+                                    movie!.releaseDate?.toISOString() ?? "",
+                            }}
+                        />
+                        <p className="mt-2 text-yellow-400 font-semibold">
+                            Avg: {avg?.toFixed(1)}/10
+                        </p>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
