@@ -4,12 +4,12 @@ import { notFound } from "next/navigation";
 import GenreLabel from "@/components/GenreLabel";
 import ProductionCompanyCard from "@/components/ProductionCompanyCard";
 import Map from "@/components/Map";
-import CommentCard from "@/components/CommentCard";
 import RatingForm from "@/components/RatingForm";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import CommentForm from "@/components/CommentForm";
+import CommentsSection from "@/components/CommentsSection";
+import RatingSection from "@/components/RatingSection";
 type MovieDetails = {
     id: number;
     title: string;
@@ -118,10 +118,10 @@ export default async function MovieDetailPage({
     }
     return (
         <div className="p-6 flex flex-col justify-center items-center">
-            <RatingForm
+            <RatingSection
                 movie={movie}
                 initialRating={initialRating ?? 0}
-                aggregate={agg ?? { average: 0, count: 0 }}
+                initialAggregate={agg ?? { average: 0, count: 0 }}
             />
 
             <h1 className="text-3xl font-bold mb-4">{movie.title}</h1>
@@ -170,8 +170,7 @@ export default async function MovieDetailPage({
                     )}
                 />
             )}
-            <CommentForm movie={movie} />
-            <CommentCard comments={comments} />
+            <CommentsSection movieId={movie.id} initialComments={comments} />
         </div>
     );
 }

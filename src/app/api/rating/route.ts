@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
+import { pusherServer } from "@/lib/pusher";
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
@@ -52,6 +53,15 @@ export async function POST(req: Request) {
             movieId: body.id,
             points: body.points,
         },
+    });
+    const agg = await prisma.rating.aggregate({
+        where: { movieId: body.id },
+        _avg: { points: true },
+        _count: { _all: true },
+    });
+    await pusherServer.trigger(`movie-${body.id}`, "rating-updated", {
+        average: agg._avg.points ?? 0,
+        count: agg._count._all ?? 0,
     });
 
     return NextResponse.json(rating);
@@ -128,7 +138,16 @@ export async function DELETE(req: Request) {
                 },
             },
         });
+        const agg = await prisma.rating.aggregate({
+            where: { movieId: body.id },
+            _avg: { points: true },
+            _count: { _all: true },
+        });
 
+        await pusherServer.trigger(`movie-${body.id}`, "rating-updated", {
+            average: agg._avg.points ?? 0,
+            count: agg._count._all ?? 0,
+        });
         return NextResponse.json({ success: true });
     } catch {
         return NextResponse.json(

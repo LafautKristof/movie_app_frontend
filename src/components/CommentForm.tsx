@@ -32,7 +32,13 @@ type Movie = {
     release_date: string;
 };
 
-export default function CommentForm({ movie }: { movie: Movie }) {
+export default function CommentForm({
+    movie,
+    onSuccess,
+}: {
+    movie: { id: number };
+    onSuccess?: (comment: any) => void;
+}) {
     const [showEmoji, setShowEmoji] = useState(false);
     const [hasContent, setHasContent] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -44,6 +50,8 @@ export default function CommentForm({ movie }: { movie: Movie }) {
                 bulletList: false,
                 orderedList: false,
                 listItem: false,
+                link: false,
+                underline: false,
             }),
             BulletList,
             OrderedList,
@@ -130,11 +138,13 @@ export default function CommentForm({ movie }: { movie: Movie }) {
         setSaving(false);
 
         if (res.ok) {
+            const newComment = await res.json();
+
             editor?.commands.clearContent();
             setShowEmoji(false);
-            // Refreshen zodat nieuwe comment bovenaan verschijnt
-            window.location.reload();
-            // (alternatief: lift state op + router.refresh() in client wrapper)
+
+            // 👉 stuur de nieuwe comment door naar de parent (CommentsSection)
+            if (onSuccess) onSuccess(newComment);
         } else {
             console.error("Comment opslaan mislukt");
         }

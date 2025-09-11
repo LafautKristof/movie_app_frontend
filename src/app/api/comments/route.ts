@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
-
+import { pusherServer } from "@/lib/pusher";
 // 👉 Alle comments ophalen
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -61,7 +61,12 @@ export async function POST(req: Request) {
         },
         include: { user: { select: { name: true } } },
     });
-
+    await pusherServer.trigger(`movie-${movieId}`, "new-comment", {
+        id: comment.id,
+        body: comment.body,
+        createdAt: comment.createdAt,
+        user: { name: comment.user?.name ?? "Anonieme gebruiker" },
+    });
     return NextResponse.json({
         id: comment.id,
         body: comment.body,
