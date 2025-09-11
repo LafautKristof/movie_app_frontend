@@ -1,16 +1,20 @@
 // app/search/page.tsx  (SERVER)
 import MovieList from "@/components/MovieList";
 import MovieSearch from "@/components/MovieSearch"; // client form
+import Pagination from "@/components/Pagination";
 
 export default async function SearchPage({
     searchParams,
 }: {
     searchParams?: { q?: string; genres?: string; page?: string };
 }) {
+    console.log("searchParams in movies", searchParams);
     const query = searchParams?.q || "";
     const genres = searchParams?.genres?.split(",").map(Number) || [];
     const page = parseInt(searchParams?.page || "1");
-
+    console.log("page", page);
+    console.log("genres", genres);
+    console.log("query", query);
     let results: any[] = [];
     let totalPages = 1;
 
@@ -21,14 +25,13 @@ export default async function SearchPage({
         if (genres.length > 0) params.set("genres", genres.join(","));
 
         const res = await fetch(
-            `${
-                process.env.NEXTAUTH_URL
-            }/api/movies/search?${params.toString()}`,
+            `${process.env.NEXTAUTH_URL}/api/movies?${params.toString()}`,
             { cache: "no-store" } // altijd verse data
         );
         if (res.ok) {
             const data = await res.json();
             results = data.results ?? [];
+            console.log("results", results);
             totalPages = data.total_pages ?? 1;
         }
     }
@@ -43,9 +46,17 @@ export default async function SearchPage({
             {results.length > 0 && (
                 <>
                     <MovieList movies={results} />
-                    <p className="mt-4">
-                        Page {page} of {totalPages}
-                    </p>
+                    <Pagination
+                        page={page}
+                        totalPages={totalPages}
+                        basePath="/movies"
+                        searchParams={{
+                            ...(query ? { q: query } : {}),
+                            ...(genres.length > 0
+                                ? { genres: genres.join(",") }
+                                : {}),
+                        }}
+                    />
                 </>
             )}
         </div>

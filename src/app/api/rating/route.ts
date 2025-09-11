@@ -57,17 +57,83 @@ export async function POST(req: Request) {
     return NextResponse.json(rating);
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+    const session = await getServerSession(authOptions);
+
+    const { searchParams } = new URL(req.url);
+    const movieIdParam = searchParams.get("movieId");
+    const movieId = Number(movieIdParam);
+
+    if (!movieId || Number.isNaN(movieId)) {
+        return NextResponse.json({ error: "Invalid movieId" }, { status: 400 });
+    }
+
+    // aggregaat altijd publiek
+    const agg = await prisma.rating.aggregate({
+        where: { movieId },
+        _avg: { points: true },
+        _count: { _all: true },
+    });
+
+    let rating = null;
+    if (session?.user?.email) {
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+            select: { id: true },
+        });
+        if (user) {
+            rating = await prisma.rating.findUnique({
+                where: { userId_movieId: { userId: user.id, movieId } },
+                select: {
+                    id: true,
+                    points: true,
+
+                    createdAt: true,
+                },
+            });
+        }
+    }
+
+    return NextResponse.json({
+        rating, // null voor gasten
+        aggregate: {
+            average: agg._avg.points ?? null,
+            count: agg._count._all ?? 0,
+        },
+    });
+}
+export async function DELETE(req: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const body = await req.json();
+
     const user = await prisma.user.findUnique({
         where: { email: session.user.email },
-        include: { ratings: { include: { movie: true } } }, // ✅ ook movie info meegeven
     });
 
-    return NextResponse.json(user?.ratings ?? []);
+    if (!user) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    try {
+        await prisma.rating.delete({
+            where: {
+                userId_movieId: {
+                    userId: user.id,
+                    movieId: body.id,
+                },
+            },
+        });
+
+        return NextResponse.json({ success: true });
+    } catch {
+        return NextResponse.json(
+            { error: "Rating not found" },
+            { status: 404 }
+        );
+    }
 }

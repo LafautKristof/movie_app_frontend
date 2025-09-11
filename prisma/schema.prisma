@@ -17,8 +17,13 @@ model User {
   accounts      Account[]
   sessions      Session[]
   favorites     Favorite[] // <-- jouw extra tabel voor films
-  watchlist Watchlist[]
-  ratings   Rating[]
+  watchlist     Watchlist[]
+  ratings       Rating[]
+  uploads       Upload[]
+  comments      Comment[]
+createdAt DateTime @default(now())
+updatedAt DateTime @default(now()) @updatedAt  
+  
 }
 
 model Account {
@@ -87,7 +92,8 @@ model Movie {
   releaseDate DateTime?
   ratings    Rating[]
   favorites  Favorite[]   // 👈 backlink naar Favorite
-  watchlists Watchlist[]  // 👈 backlink naar Watchlist
+  watchlists Watchlist[] 
+  comments   Comment[] // 👈 backlink naar Watchlist
 
 }
 model Rating {
@@ -98,7 +104,26 @@ model Rating {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   movie Movie @relation(fields: [movieId], references: [id])
+
   @@unique([userId, movieId]) // één rating per user per film
+}
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  movieId   Int
+  body      String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie @relation(fields: [movieId], references: [id])
+}
+model Upload {
+  id        String   @id @default(cuid())
+  userId    String
+  url       String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

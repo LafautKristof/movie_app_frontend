@@ -14,6 +14,7 @@ type ServerProps = {
     page: number;
     totalPages: number;
     basePath: string;
+    searchParams?: Record<string, string>;
     setPage?: never;
     onPageChange?: never;
 };
@@ -59,11 +60,19 @@ export default function Pagination(props: Props) {
 
     // ✅ server-side mode
     if ("basePath" in props) {
+        const { basePath, page, totalPages, searchParams } =
+            props as ServerProps & { searchParams?: Record<string, string> };
+
+        function makeHref(newPage: number) {
+            const params = new URLSearchParams(searchParams || {});
+            params.set("page", String(newPage));
+            return `${basePath}?${params.toString()}`;
+        }
         return (
             <div className="flex justify-center gap-4 mt-6">
                 {page > 1 && (
                     <Link
-                        href={`${props.basePath}?page=${page - 1}`}
+                        href={makeHref(page - 1)}
                         className="px-4 py-2 bg-gray-600 text-white rounded"
                     >
                         Prev
@@ -76,7 +85,7 @@ export default function Pagination(props: Props) {
 
                 {page < totalPages && (
                     <Link
-                        href={`${props.basePath}?page=${page + 1}`}
+                        href={makeHref(page + 1)}
                         className="px-4 py-2 bg-gray-600 text-white rounded"
                     >
                         Next

@@ -33,7 +33,7 @@ export default function Navbar() {
                         {isMoviesOpen && (
                             <div className="absolute left-0 mt-2 w-48 bg-gray-800 rounded shadow-lg z-50">
                                 <Link
-                                    href="/search"
+                                    href="/movies"
                                     className="block px-4 py-2 hover:bg-gray-700"
                                     onClick={() => setIsMoviesOpen(false)}
                                 >
@@ -47,11 +47,11 @@ export default function Navbar() {
                                     Genres
                                 </Link>
                                 <Link
-                                    href="/releases"
+                                    href="/stats"
                                     className="block px-4 py-2 hover:bg-gray-700"
                                     onClick={() => setIsMoviesOpen(false)}
                                 >
-                                    Upcoming Releases
+                                    Stats
                                 </Link>
                                 <Link
                                     href="/movies/popular"

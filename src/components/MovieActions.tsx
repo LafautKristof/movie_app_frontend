@@ -11,18 +11,17 @@ type Movie = {
     id: number;
     title: string;
     poster_path: string | null;
+    release_date: string;
 };
 
 export default function MovieActions({
     movie,
     initialFavorites,
     initialWatchlist,
-    initialRating,
 }: {
     movie: Movie;
     initialFavorites: boolean;
     initialWatchlist: boolean;
-    initialRating?: number;
 }) {
     const { data: session } = useSession();
     const router = useRouter();
@@ -101,7 +100,11 @@ export default function MovieActions({
                 {inWatchlist ? "✔ In Watchlist" : "➕ Add to Watchlist"}
             </span>
 
-            <RatingForm movie={movie} initialRating={initialRating} />
+            {/* <RatingForm
+                movie={movie}
+                initialRating={initialRating}
+                initialComment={initialComment}
+            /> */}
         </div>
     );
 }

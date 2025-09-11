@@ -24,11 +24,14 @@ export default function MovieSearch({
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         const params = new URLSearchParams();
-        if (query.trim()) params.set("q", query.trim());
-        if (selectedGenres.length > 0)
+        if (query.trim()) {
+            // ✅ Zoekterm heeft voorrang → genres worden genegeerd
+            params.set("q", query.trim());
+        } else if (selectedGenres.length > 0) {
             params.set("genres", selectedGenres.join(","));
+        }
         params.set("page", "1");
-        router.push(`/search?${params.toString()}`);
+        router.push(`/movies?${params.toString()}`);
     }
 
     return (
@@ -48,18 +51,21 @@ export default function MovieSearch({
                 </button>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-                {Object.entries(genreMap).map(([id, name]) => (
-                    <label key={id} className="flex items-center gap-1">
-                        <input
-                            type="checkbox"
-                            checked={selectedGenres.includes(Number(id))}
-                            onChange={() => toggleGenre(Number(id))}
-                        />
-                        {name}
-                    </label>
-                ))}
-            </div>
+            {/* Genres alleen actief als query leeg is */}
+            {!query.trim() && (
+                <div className="flex flex-wrap gap-2">
+                    {Object.entries(genreMap).map(([id, name]) => (
+                        <label key={id} className="flex items-center gap-1">
+                            <input
+                                type="checkbox"
+                                checked={selectedGenres.includes(Number(id))}
+                                onChange={() => toggleGenre(Number(id))}
+                            />
+                            {name}
+                        </label>
+                    ))}
+                </div>
+            )}
         </form>
     );
 }

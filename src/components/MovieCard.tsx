@@ -25,10 +25,6 @@ const MovieCard = async ({ movie }: { movie: Movie }) => {
                 id: true,
                 favorites: { select: { movieId: true } },
                 watchlist: { select: { movieId: true } },
-                ratings: {
-                    where: { movieId: movie.id }, // 👈 alleen deze film
-                    select: { points: true },
-                },
             },
         });
 
@@ -36,15 +32,13 @@ const MovieCard = async ({ movie }: { movie: Movie }) => {
             user?.favorites.some((f) => f.movieId === movie.id) ?? false;
         isWatchlist =
             user?.watchlist.some((f) => f.movieId === movie.id) ?? false;
-        initialRating = user?.ratings[0]?.points ?? 0;
-        console.log("Rating for", movie.id, "=", user?.ratings);
     }
 
     return (
         <>
             <div>
                 {" "}
-                <Link href={`/search/${movie.id}`}>
+                <Link href={`/movies/${movie.id}`}>
                     <Image
                         src={
                             movie.poster_path !== null
@@ -72,7 +66,6 @@ const MovieCard = async ({ movie }: { movie: Movie }) => {
                     movie={movie}
                     initialFavorites={isFavorite}
                     initialWatchlist={isWatchlist}
-                    initialRating={initialRating}
                 />
             </div>
         </>
