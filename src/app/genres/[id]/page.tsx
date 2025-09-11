@@ -5,13 +5,13 @@ import Pagination from "@/components/Pagination";
 import { notFound } from "next/navigation";
 import { genreMap, genreColors } from "@/helpers/genresMap";
 
-export default async function GenrePage({
-    params,
-    searchParams,
-}: {
-    params: Promise<{ id: string }>;
-    searchParams: { page?: string };
-}) {
+export default async function GenrePage(
+    props: {
+        params: Promise<{ id: string }>;
+        searchParams: Promise<{ page?: string }>;
+    }
+) {
+    const searchParams = await props.searchParams;
     const page = Number(searchParams.page) || 1;
     const { id } = await params;
 

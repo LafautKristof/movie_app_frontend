@@ -45,11 +45,12 @@ type RatingResponse = {
     aggregate?: { average: number | null | undefined; count: number };
 };
 
-export default async function MovieDetailPage({
-    params,
-}: {
-    params: { id: string }; // ✅ niet als Promise
-}) {
+export default async function MovieDetailPage(
+    props: {
+        params: Promise<{ id: string }>; // ✅ niet als Promise
+    }
+) {
+    const params = await props.params;
     const session = await getServerSession(authOptions);
     const id = params.id;
 

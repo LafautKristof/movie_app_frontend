@@ -76,6 +76,9 @@ export default function Navbar() {
                     <Link href="/watchlist" className="hover:text-gray-300">
                         Watchlist
                     </Link>
+                    <Link href="/users" className="hover:text-gray-300">
+                        Users
+                    </Link>
                 </div>
 
                 {/* Auth */}

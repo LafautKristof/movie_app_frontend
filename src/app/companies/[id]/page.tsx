@@ -4,13 +4,13 @@ import Pagination from "@/components/Pagination";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
-export default async function CompanyPage({
-    params,
-    searchParams,
-}: {
-    params: Promise<{ id: string }>;
-    searchParams?: { page?: string };
-}) {
+export default async function CompanyPage(
+    props: {
+        params: Promise<{ id: string }>;
+        searchParams?: Promise<{ page?: string }>;
+    }
+) {
+    const searchParams = await props.searchParams;
     const { id } = await params;
     const page = Number(searchParams?.page) || 1;
     const companyRes = await fetch(

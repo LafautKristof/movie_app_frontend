@@ -1,11 +1,12 @@
 import prisma from "@/lib/prisma";
 import MovieCard from "@/components/MovieCard";
 
-export default async function HomePage({
-    searchParams,
-}: {
-    searchParams?: { limit?: string };
-}) {
+export default async function HomePage(
+    props: {
+        searchParams?: Promise<{ limit?: string }>;
+    }
+) {
+    const searchParams = await props.searchParams;
     const limit = parseInt(searchParams?.limit ?? "8", 10);
 
     // top rated query
