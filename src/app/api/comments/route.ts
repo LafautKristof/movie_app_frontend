@@ -7,8 +7,6 @@ import { pusherServer } from "@/lib/pusher";
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const movieId = searchParams.get("movieId");
-    console.log("searchParams", searchParams);
-    console.log("movieId", movieId);
 
     if (!movieId) {
         return NextResponse.json(
@@ -22,7 +20,7 @@ export async function GET(req: Request) {
         include: { user: { select: { name: true } } },
         orderBy: { createdAt: "desc" },
     });
-    console.log("comments in route", comments);
+
     return NextResponse.json({
         comments: comments.map((c) => ({
             id: c.id,

@@ -10,7 +10,7 @@ type MapProps = {
 
 export default function Map({ originCountries }: MapProps) {
     const [geoData, setGeoData] = useState<any>(null);
-    console.log(originCountries);
+
     useEffect(() => {
         fetch("/geo/geojson.json")
             .then((res) => res.json())

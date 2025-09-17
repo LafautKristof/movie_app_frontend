@@ -12,6 +12,15 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     secret: process.env.NEXTAUTH_SECRET,
+    callbacks: {
+        async session({ session, user }) {
+            // Zorg dat prisma user.id in de session zit
+            if (session.user) {
+                session.user.id = user.id;
+            }
+            return session;
+        },
+    },
 };
 
 const handler = NextAuth(authOptions);

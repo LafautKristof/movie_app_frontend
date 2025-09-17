@@ -9,9 +9,9 @@ generator client {
 }
 
 model User {
-  id            String     @id @default(cuid())
+  id            String      @id @default(cuid())
   name          String?
-  email         String?    @unique
+  email         String?     @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
@@ -21,24 +21,27 @@ model User {
   ratings       Rating[]
   uploads       Upload[]
   comments      Comment[]
-createdAt DateTime @default(now())
-updatedAt DateTime @default(now()) @updatedAt  
-  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now()) @updatedAt
+
+  participants ConversationParticipant[]
+  sentMessages Message[]                 @relation("Message_sender")
+  ownedConversations Conversation[]
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -63,39 +66,40 @@ model VerificationToken {
 }
 
 model Favorite {
-  id         String   @id @default(cuid())
-  userId     String
-  movieId    Int
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  movieId   Int
+  createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, movieId])
 }
 
 model Watchlist {
-  id         String   @id @default(cuid())
-  userId     String
-  movieId    Int
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  movieId   Int
+  createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  @@unique([userId, movieId], name: "userId_movieId") 
+
+  @@unique([userId, movieId], name: "userId_movieId")
 }
 
 model Movie {
-  id         Int       @id        // TMDB movieId
-  title      String
-  posterPath String?
+  id          Int         @id // TMDB movieId
+  title       String
+  posterPath  String?
   releaseDate DateTime?
-  ratings    Rating[]
-  favorites  Favorite[]   // 👈 backlink naar Favorite
-  watchlists Watchlist[] 
-  comments   Comment[] // 👈 backlink naar Watchlist
-
+  ratings     Rating[]
+  favorites   Favorite[] // 👈 backlink naar Favorite
+  watchlists  Watchlist[]
+  comments    Comment[] // 👈 backlink naar Watchlist
 }
+
 model Rating {
   id        String   @id @default(cuid())
   userId    String
@@ -109,6 +113,7 @@ model Rating {
 
   @@unique([userId, movieId]) // één rating per user per film
 }
+
 model Comment {
   id        String   @id @default(cuid())
   userId    String
@@ -119,6 +124,7 @@ model Comment {
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   movie Movie @relation(fields: [movieId], references: [id])
 }
+
 model Upload {
   id        String   @id @default(cuid())
   userId    String
@@ -126,4 +132,41 @@ model Upload {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id           String                     @id @default(cuid())
+  participants ConversationParticipant[]
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt @default(now())
+  messages     Message[]
+  title        String?                     // optioneel
+  color        String?
+  isGroup      Boolean                      @default(false)                     // optioneel
+  ownerId     String?  
+  owner       User?     @relation(fields: [ownerId], references: [id])
+}
+
+model ConversationParticipant {
+  id             String        @id @default(cuid())
+  userId         String
+  conversationId String
+  createdAt      DateTime      @default(now())  // 👈 toegevoegd
+  updatedAt      DateTime?      @updatedAt       // 👈 toegevoegd
+  user           User          @relation(fields: [userId], references: [id])
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conversationId],name: "userId_conversationId") // voorkomt dubbele deelname
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  content        String
+  createdAt      DateTime      @default(now())
+
+  conversationId String
+  senderId       String
+
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User          @relation("Message_sender", fields: [senderId], references: [id])
 }

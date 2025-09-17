@@ -3,19 +3,14 @@ import MovieList from "@/components/MovieList";
 import MovieSearch from "@/components/MovieSearch"; // client form
 import Pagination from "@/components/Pagination";
 
-export default async function SearchPage(
-    props: {
-        searchParams?: Promise<{ q?: string; genres?: string; page?: string }>;
-    }
-) {
+export default async function SearchPage(props: {
+    searchParams?: Promise<{ q?: string; genres?: string; page?: string }>;
+}) {
     const searchParams = await props.searchParams;
-    console.log("searchParams in movies", searchParams);
     const query = searchParams?.q || "";
     const genres = searchParams?.genres?.split(",").map(Number) || [];
     const page = parseInt(searchParams?.page || "1");
-    console.log("page", page);
-    console.log("genres", genres);
-    console.log("query", query);
+
     let results: any[] = [];
     let totalPages = 1;
 
@@ -32,7 +27,7 @@ export default async function SearchPage(
         if (res.ok) {
             const data = await res.json();
             results = data.results ?? [];
-            console.log("results", results);
+
             totalPages = data.total_pages ?? 1;
         }
     }

@@ -10,7 +10,6 @@ const supabase = createClient(
 );
 
 export async function POST(req: Request) {
-    console.log("🚀 Upload API route gestart");
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,7 +17,7 @@ export async function POST(req: Request) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    console.log("file", file);
+
     if (!file) {
         return NextResponse.json(
             { error: "No file uploaded" },
@@ -38,6 +37,7 @@ export async function POST(req: Request) {
         });
 
     if (uploadError) {
+        console.error("❌ Upload error:", uploadError);
         return NextResponse.json(
             { error: uploadError.message },
             { status: 500 }
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     const { data } = supabase.storage.from("uploads").getPublicUrl(fileName);
 
     const publicUrl = data.publicUrl; // 👈 hier goed zetten
-    console.log(publicUrl);
+
     // Opslaan in Prisma
     const user = await prisma.user.findUnique({
         where: { email: session.user.email },

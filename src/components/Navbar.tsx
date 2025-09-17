@@ -79,6 +79,9 @@ export default function Navbar() {
                     <Link href="/users" className="hover:text-gray-300">
                         Users
                     </Link>
+                    <Link href="/conversations" className="hover:text-gray-300">
+                        Chat
+                    </Link>
                 </div>
 
                 {/* Auth */}

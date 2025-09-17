@@ -1,18 +1,18 @@
-// app/company/[id]/page.tsx
 import MovieCard from "@/components/MovieCard";
 import Pagination from "@/components/Pagination";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
-export default async function CompanyPage(
-    props: {
-        params: Promise<{ id: string }>;
-        searchParams?: Promise<{ page?: string }>;
-    }
-) {
-    const searchParams = await props.searchParams;
-    const { id } = await params;
+export default async function CompanyPage({
+    params,
+    searchParams,
+}: {
+    params: { id: string };
+    searchParams?: { page?: string };
+}) {
+    const { id } = params;
     const page = Number(searchParams?.page) || 1;
+
     const companyRes = await fetch(
         `https://api.themoviedb.org/3/company/${id}?api_key=${process.env.TMDB_API_KEY}`,
         { cache: "no-store" }
@@ -20,7 +20,6 @@ export default async function CompanyPage(
     if (!companyRes.ok) notFound();
     const company = await companyRes.json();
 
-    // 2. Haal films van deze company op
     const moviesRes = await fetch(
         `https://api.themoviedb.org/3/discover/movie?with_companies=${id}&page=${page}&api_key=${process.env.TMDB_API_KEY}`,
         { cache: "no-store" }
@@ -42,6 +41,7 @@ export default async function CompanyPage(
                 )}
                 <h1 className="text-3xl font-bold">{company.name}</h1>
             </div>
+
             <h2 className="text-2xl font-semibold mb-4">
                 Films van dit productiehuis
             </h2>
@@ -51,6 +51,7 @@ export default async function CompanyPage(
                     <MovieCard movie={movie} key={movie.id} />
                 ))}
             </ul>
+
             <Pagination
                 page={data.page}
                 totalPages={data.total_pages}
